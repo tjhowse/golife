@@ -92,9 +92,18 @@ func (w *World) AddRandomCrits(count int) {
 	}
 }
 
+// Randomise the position of all crits.
+func (w *World) RandomiseCritPositions() {
+	for i := 0; i < len(w.crits); i++ {
+		w.crits[i].pos.X, w.crits[i].pos.X = w.GetRandomValidPosition()
+	}
+}
+
 // This tops up the world to the provided number using mutated brains from
 // surviving crits.
 func (w *World) RefillCritsWithMutatedConnectomes(count int) {
+	w.RandomiseCritPositions()
+
 	critsToMake := count - len(w.crits)
 	for i := 0; i < critsToMake; i++ {
 		x, y := w.GetRandomValidPosition()
@@ -103,4 +112,5 @@ func (w *World) RefillCritsWithMutatedConnectomes(count int) {
 		connectome.Mutate(10)
 		w.AddCrit(NewCrit(x, y, GRID_TO_PIXEL, color.Black, w, connectome))
 	}
+
 }
