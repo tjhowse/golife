@@ -16,7 +16,7 @@ type Crit struct {
 	s    []float64
 }
 
-func NewCrit(x, y, size int, c color.Color, w *World, connectome [32]byte) *Crit {
+func NewCrit(x, y, size int, c color.Color, w *World, connectome Connectome) *Crit {
 	b := NewBrain(connectome)
 	s := make([]float64, len(b.inputNeurons))
 	crit := Crit{tj.Vec2{X: x, Y: y}, GRID_TO_PIXEL / 2, c, w, b, s}

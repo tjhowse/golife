@@ -1,5 +1,7 @@
 package main
 
+import "math/rand"
+
 type ActivationFunction func()
 
 type Neuron struct {
@@ -27,6 +29,31 @@ type Brain struct {
 	internalNeurons []Neuron
 	outputNeurons   []Neuron
 	synapses        []Synapse
+	connectome      Connectome
+}
+
+type Connectome struct {
+	c [32]byte
+}
+
+func (c *Connectome) Randomise() {
+	rand.Read(c.c[:])
+}
+func (c *Connectome) Mutate(bitsToFlip int) {
+
+	for i := 0; i < bitsToFlip; i++ {
+		byteToFlip := rand.Intn(len(c.c))
+		bitToFlip := rand.Intn(8)
+		if c.c[byteToFlip]&(1<<bitToFlip) != 0 {
+			c.c[byteToFlip] ^= 1 << bitToFlip
+		} else {
+			c.c[byteToFlip] |= 1 << bitToFlip
+		}
+	}
+}
+
+func (c *Connectome) CopyFrom(t *Connectome) {
+	copy(c.c[:], t.c[:])
 }
 
 func (b *Brain) Tick(senses []float64) {
@@ -61,10 +88,10 @@ const INTERNAL_NEURON_COUNT = 2
 const OUTPUT_NEURONS_COUNT = 6
 const SYNAPSE_COUNT = 10
 
-func NewBrain(connectome [32]byte) *Brain {
+func NewBrain(connectome Connectome) *Brain {
 
 	// Do some basic sanity-checking
-	if SYNAPSE_COUNT*3 > len(connectome) {
+	if SYNAPSE_COUNT*3 > len(connectome.c) {
 		panic("Connectome is too small")
 	}
 	if INPUT_NEURON_COUNT > 255 {
@@ -78,6 +105,7 @@ func NewBrain(connectome [32]byte) *Brain {
 	}
 
 	b := Brain{}
+	b.connectome = connectome
 	b.inputNeurons = make([]Neuron, INPUT_NEURON_COUNT)
 	b.internalNeurons = make([]Neuron, INTERNAL_NEURON_COUNT)
 	b.outputNeurons = make([]Neuron, OUTPUT_NEURONS_COUNT)
@@ -104,9 +132,9 @@ func NewBrain(connectome [32]byte) *Brain {
 		valid_to_neurons = append(valid_to_neurons, &b.outputNeurons[i])
 	}
 	for i := 0; i < len(b.synapses); i++ {
-		b.synapses[i].from = valid_from_neurons[int(connectome[i*3])%len(valid_from_neurons)]
-		b.synapses[i].to = valid_to_neurons[int(connectome[i*3+1])%len(valid_to_neurons)]
-		b.synapses[i].weight = float64(connectome[i*3+2]) / float64(255)
+		b.synapses[i].from = valid_from_neurons[int(connectome.c[i*3])%len(valid_from_neurons)]
+		b.synapses[i].to = valid_to_neurons[int(connectome.c[i*3+1])%len(valid_to_neurons)]
+		b.synapses[i].weight = float64(connectome.c[i*3+2]) / float64(255)
 	}
 	return &b
 }
