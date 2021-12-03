@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
 	"image/color"
 
 	gg "github.com/fogleman/gg"
@@ -17,12 +16,10 @@ type Crit struct {
 	s    []float64
 }
 
-func NewCrit(x, y, size int, c color.Color, w *World) *Crit {
-	connectome := [32]byte{}
-	rand.Read(connectome[:])
+func NewCrit(x, y, size int, c color.Color, w *World, connectome [32]byte) *Crit {
 	b := NewBrain(connectome)
 	s := make([]float64, len(b.inputNeurons))
-	crit := Crit{tj.Vec2{X: x, Y: y}, size, c, w, b, s}
+	crit := Crit{tj.Vec2{X: x, Y: y}, GRID_TO_PIXEL / 2, c, w, b, s}
 	b.outputNeurons[0].function = crit.MoveUp
 	b.outputNeurons[1].function = crit.MoveDown
 	b.outputNeurons[2].function = crit.MoveLeft
@@ -31,19 +28,27 @@ func NewCrit(x, y, size int, c color.Color, w *World) *Crit {
 }
 
 func (c *Crit) MoveUp() {
-	c.pos.Y -= 10
+	if c.w.CheckMove(c.pos.X, c.pos.Y-1) {
+		c.pos.Y -= GRID_TO_PIXEL
+	}
 }
 
 func (c *Crit) MoveDown() {
-	c.pos.Y += 10
+	if c.w.CheckMove(c.pos.X, c.pos.Y+1) {
+		c.pos.Y += GRID_TO_PIXEL
+	}
 }
 
 func (c *Crit) MoveLeft() {
-	c.pos.X -= 10
+	if c.w.CheckMove(c.pos.X-1, c.pos.Y) {
+		c.pos.X -= GRID_TO_PIXEL
+	}
 }
 
 func (c *Crit) MoveRight() {
-	c.pos.X += 10
+	if c.w.CheckMove(c.pos.X+1, c.pos.Y) {
+		c.pos.X += GRID_TO_PIXEL
+	}
 }
 
 func (c *Crit) Draw(dc *gg.Context) {

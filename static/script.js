@@ -3,7 +3,7 @@ function update() {
         timestamp = (new Date()).getTime(),
         newUrl = source + '?_=' + timestamp;
     document.getElementById("world").src = newUrl;
-    setTimeout(update, 1000);
+    setTimeout(update, 100);
 }
 
 update();
