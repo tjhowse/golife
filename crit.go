@@ -16,6 +16,7 @@ type Crit struct {
 	s    []float64
 }
 
+// A factory function for creating crits.
 func NewCrit(x, y, size int, c color.Color, w *World, connectome Connectome) *Crit {
 	b := NewBrain(connectome)
 	s := make([]float64, len(b.inputNeurons))
@@ -27,6 +28,7 @@ func NewCrit(x, y, size int, c color.Color, w *World, connectome Connectome) *Cr
 	return &crit
 }
 
+// Movement functions to be bound to output neurons.
 func (c *Crit) MoveUp() {
 	if c.w.CheckMove(c.pos.X, c.pos.Y-1) {
 		c.pos.Y -= GRID_TO_PIXEL
@@ -51,20 +53,20 @@ func (c *Crit) MoveRight() {
 	}
 }
 
+// Draw the crit on the given context.
 func (c *Crit) Draw(dc *gg.Context) {
 	dc.SetColor(c.c)
 	dc.DrawCircle(float64(c.pos.X), float64(c.pos.Y), float64(c.size))
 }
 
+// Update the crit's body and brain.
 func (c *Crit) Tick() {
-	// Senses should probably go here? The crit can map between the world and the brain's
-	// input neurons.
-
 	// Toggle sense 0 on and off every frame.
 	if c.w.frames%2 == 0 {
 		c.s[0] = 1
 	} else {
 		c.s[0] = 0
 	}
+	// TODO Add more senses
 	c.b.Tick(c.s)
 }

@@ -19,10 +19,12 @@ type World struct {
 	frames int // The number of frames that have passed
 }
 
+// Add a crit to the world.
 func (w *World) AddCrit(c *Crit) {
 	w.crits = append(w.crits, c)
 }
 
+// Call Tick() on all crits in the world, "ticks" times.
 func (w *World) Tick(ticks int) {
 	for j := 0; j < ticks; j++ {
 		for i := 0; i < len(w.crits); i++ {
@@ -45,6 +47,7 @@ func (w *World) CheckMove(x, y int) bool {
 	return true
 }
 
+// Draw the world to the provided buffer as PNG.
 func (w *World) Draw(o *bytes.Buffer) {
 	dc := gg.NewContext(WORLD_WIDTH, WORLD_HEIGHT)
 
@@ -56,6 +59,7 @@ func (w *World) Draw(o *bytes.Buffer) {
 	dc.EncodePNG(o)
 }
 
+// Handles serving the world as a png to the webserver
 func (w *World) ImgHandler(response http.ResponseWriter, request *http.Request) {
 
 	buff := bytes.Buffer{}
@@ -65,6 +69,7 @@ func (w *World) ImgHandler(response http.ResponseWriter, request *http.Request) 
 	response.Write(buff.Bytes())
 }
 
+// Get a random position on the world that is not occupied by a crit.
 func (w *World) GetRandomValidPosition() (x, y int) {
 	for x, y = -1, -1; !w.CheckMove(x, y); {
 		x = rand.Intn(WORLD_WIDTH/GRID_TO_PIXEL) * GRID_TO_PIXEL
@@ -73,6 +78,7 @@ func (w *World) GetRandomValidPosition() (x, y int) {
 	return x, y
 }
 
+// Cull some of the crits in the world based on cruel, arbitrary rules.
 func (w *World) CullCrits() {
 	living := make([]*Crit, 0)
 	for _, c := range w.crits {
@@ -83,6 +89,7 @@ func (w *World) CullCrits() {
 	w.crits = living
 }
 
+// Adds this many crits to the world with random connectomes.
 func (w *World) AddRandomCrits(count int) {
 	for i := 0; i < count; i++ {
 		x, y := w.GetRandomValidPosition()

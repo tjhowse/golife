@@ -1,6 +1,8 @@
 package main
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 type ActivationFunction func()
 
@@ -10,6 +12,8 @@ type Neuron struct {
 	function   ActivationFunction
 }
 
+// Check if the neuron's bound function needs to be fired
+// based on its activation level.
 func (n *Neuron) Tick() {
 	if n.function == nil {
 		return
@@ -19,9 +23,17 @@ func (n *Neuron) Tick() {
 	}
 }
 
+// Used to connect neurons on the brain.
 type Synapse struct {
 	weight   float64
 	to, from *Neuron
+}
+
+func (s *Synapse) Tick() {
+	if s.from == nil || s.to == nil {
+		return
+	}
+	s.to.activation += s.weight * s.from.activation
 }
 
 type Brain struct {
@@ -36,11 +48,13 @@ type Connectome struct {
 	c [32]byte
 }
 
+// Randomise this connectome.
 func (c *Connectome) Randomise() {
 	rand.Read(c.c[:])
 }
-func (c *Connectome) Mutate(bitsToFlip int) {
 
+// Flip a number of bits at random in this connectome.
+func (c *Connectome) Mutate(bitsToFlip int) {
 	for i := 0; i < bitsToFlip; i++ {
 		byteToFlip := rand.Intn(len(c.c))
 		bitToFlip := rand.Intn(8)
@@ -52,36 +66,33 @@ func (c *Connectome) Mutate(bitsToFlip int) {
 	}
 }
 
+// Copy from the provided connectome into this one.
 func (c *Connectome) CopyFrom(t *Connectome) {
 	copy(c.c[:], t.c[:])
 }
 
+// Tick the brain.
 func (b *Brain) Tick(senses []float64) {
 	// Process input neurons
 	if len(senses) > len(b.inputNeurons) {
 		panic("Too many senses")
 	}
+
+	// Iterate over the senses and assign them to the input neurons.
 	for i, s := range senses {
 		b.inputNeurons[i].activation = s
 	}
+
+	// Tick all the synapses to propagate the activation levels.
 	for i := 0; i < len(b.synapses); i++ {
-		if b.synapses[i].from == nil || b.synapses[i].to == nil {
-			continue
-		}
-		b.synapses[i].to.activation += b.synapses[i].from.activation * b.synapses[i].weight
+		b.synapses[i].Tick()
 	}
+
 	// Process output neurons
 	for i := 0; i < len(b.outputNeurons); i++ {
 		b.outputNeurons[i].Tick()
 	}
 }
-
-// func (b *Brain)
-
-// const INPUT_NEURON_BITS = 2
-// const INTERNAL_NEURON_BITS = 1
-// const OUTPUT_NEURON_BITS = 2
-// const NEURON_WEIGHT_BITS = 8 - INPUT_NEURON_BITS - INTERNAL_NEURON_BITS - OUTPUT_NEURON_BITS
 
 const INPUT_NEURON_COUNT = 6
 const INTERNAL_NEURON_COUNT = 2
@@ -106,18 +117,22 @@ func NewBrain(connectome Connectome) *Brain {
 
 	b := Brain{}
 	b.connectome = connectome
+
+	// Create the neurons in the brain.
 	b.inputNeurons = make([]Neuron, INPUT_NEURON_COUNT)
 	b.internalNeurons = make([]Neuron, INTERNAL_NEURON_COUNT)
 	b.outputNeurons = make([]Neuron, OUTPUT_NEURONS_COUNT)
+
+	// Set a starting threshold of 0.5 for all neurons.
 	for i := 0; i < len(b.inputNeurons); i++ {
 		b.outputNeurons[i].threshold = 0.5
 	}
 	b.synapses = make([]Synapse, SYNAPSE_COUNT)
-	// b.synapses[0].from = &b.inputNeurons[0]
-	// b.synapses[0].to = &b.outputNeurons[0]
-	// b.synapses[0].weight = 1
+
+	// Make some helper slices to help with allocating synapses.
 	valid_from_neurons := make([]*Neuron, 0)
 	valid_to_neurons := make([]*Neuron, 0)
+
 	// We can only wire from input neurons
 	for i := 0; i < INPUT_NEURON_COUNT; i++ {
 		valid_from_neurons = append(valid_from_neurons, &b.inputNeurons[i])
@@ -131,6 +146,9 @@ func NewBrain(connectome Connectome) *Brain {
 	for i := 0; i < OUTPUT_NEURONS_COUNT; i++ {
 		valid_to_neurons = append(valid_to_neurons, &b.outputNeurons[i])
 	}
+
+	// For each synapse, assign a from and to neuron, and a weight, using three
+	// bytes from the connectome.
 	for i := 0; i < len(b.synapses); i++ {
 		b.synapses[i].from = valid_from_neurons[int(connectome.c[i*3])%len(valid_from_neurons)]
 		b.synapses[i].to = valid_to_neurons[int(connectome.c[i*3+1])%len(valid_to_neurons)]
