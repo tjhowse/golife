@@ -44,26 +44,26 @@ func NewCrit(x, y, size int, w *World, connectome Connectome) *Crit {
 
 // Movement functions to be bound to output neurons.
 func (c *Crit) MoveUp() {
-	if c.w.CheckMove(c.pos.X, c.pos.Y-GRID_TO_PIXEL) {
-		c.pos.Y -= GRID_TO_PIXEL
+	if c.w.CheckMove(c.pos.X, c.pos.Y-1) {
+		c.pos.Y -= 1
 	}
 }
 
 func (c *Crit) MoveDown() {
-	if c.w.CheckMove(c.pos.X, c.pos.Y+GRID_TO_PIXEL) {
-		c.pos.Y += GRID_TO_PIXEL
+	if c.w.CheckMove(c.pos.X, c.pos.Y+1) {
+		c.pos.Y += 1
 	}
 }
 
 func (c *Crit) MoveLeft() {
-	if c.w.CheckMove(c.pos.X-GRID_TO_PIXEL, c.pos.Y) {
-		c.pos.X -= GRID_TO_PIXEL
+	if c.w.CheckMove(c.pos.X-1, c.pos.Y) {
+		c.pos.X -= 1
 	}
 }
 
 func (c *Crit) MoveRight() {
-	if c.w.CheckMove(c.pos.X+GRID_TO_PIXEL, c.pos.Y) {
-		c.pos.X += GRID_TO_PIXEL
+	if c.w.CheckMove(c.pos.X+1, c.pos.Y) {
+		c.pos.X += 1
 	}
 }
 
@@ -83,7 +83,7 @@ func (c *Crit) MoveRandomly() {
 // Draw the crit on the given context.
 func (c *Crit) Draw(dc *gg.Context) {
 	dc.SetColor(c.c)
-	dc.DrawCircle(float64(c.pos.X), float64(c.pos.Y), float64(c.size))
+	dc.DrawCircle(float64(c.pos.X*GRID_TO_PIXEL), float64(c.pos.Y*GRID_TO_PIXEL), float64(c.size))
 	dc.Fill()
 }
 

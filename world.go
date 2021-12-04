@@ -9,8 +9,8 @@ import (
 	gg "github.com/fogleman/gg"
 )
 
-const WORLD_HEIGHT = 500
-const WORLD_WIDTH = 500
+const WORLD_HEIGHT = 50
+const WORLD_WIDTH = 50
 const GRID_TO_PIXEL = 10
 
 type World struct {
@@ -48,7 +48,7 @@ func (w *World) CheckMove(x, y int) bool {
 
 // Draw the world to the provided buffer as PNG.
 func (w *World) Draw(o *bytes.Buffer) {
-	dc := gg.NewContext(WORLD_WIDTH, WORLD_HEIGHT)
+	dc := gg.NewContext(WORLD_WIDTH*GRID_TO_PIXEL, WORLD_HEIGHT*GRID_TO_PIXEL)
 
 	for i := 0; i < len(w.crits); i++ {
 		w.crits[i].Draw(dc)
@@ -71,8 +71,8 @@ func (w *World) ImgHandler(response http.ResponseWriter, request *http.Request) 
 // Get a random position on the world that is not occupied by a crit.
 func (w *World) GetRandomValidPosition() (x, y int) {
 	for x, y = -1, -1; !w.CheckMove(x, y); {
-		x = rand.Intn(WORLD_WIDTH/GRID_TO_PIXEL) * GRID_TO_PIXEL
-		y = rand.Intn(WORLD_WIDTH/GRID_TO_PIXEL) * GRID_TO_PIXEL
+		x = rand.Intn(WORLD_HEIGHT)
+		y = rand.Intn(WORLD_WIDTH)
 	}
 	return x, y
 }
