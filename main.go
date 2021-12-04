@@ -21,11 +21,13 @@ func (s *Sim) BrainImgHandler(response http.ResponseWriter, request *http.Reques
 	s.w.crits[0].b.ImgHandler(response, request)
 }
 
+const CRIT_COUNT = 100
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	sim := Sim{}
 	// w := World{}
-	sim.w.AddRandomCrits(100)
+	sim.w.AddRandomCrits(CRIT_COUNT)
 	sim.w.crits[0].c = color.RGBA{255, 0, 0, 255}
 
 	http.HandleFunc("/world", sim.w.ImgHandler)
@@ -35,8 +37,9 @@ func main() {
 	for {
 		sim.w.Tick(1000)
 		time.Sleep(time.Second / 2)
-		sim.w.CullCrits()
+		sim.w.CullCrits(WORLD_WIDTH/8, WORLD_WIDTH)
 		println("Living: ", len(sim.w.crits))
-		sim.w.RefillCritsWithMutatedConnectomes(100)
+		sim.w.RandomiseCritPositions()
+		sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
 	}
 }

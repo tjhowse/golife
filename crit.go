@@ -44,25 +44,25 @@ func NewCrit(x, y, size int, w *World, connectome Connectome) *Crit {
 
 // Movement functions to be bound to output neurons.
 func (c *Crit) MoveUp() {
-	if c.w.CheckMove(c.pos.X, c.pos.Y-1) {
+	if c.w.CheckMove(c.pos.X, c.pos.Y-GRID_TO_PIXEL) {
 		c.pos.Y -= GRID_TO_PIXEL
 	}
 }
 
 func (c *Crit) MoveDown() {
-	if c.w.CheckMove(c.pos.X, c.pos.Y+1) {
+	if c.w.CheckMove(c.pos.X, c.pos.Y+GRID_TO_PIXEL) {
 		c.pos.Y += GRID_TO_PIXEL
 	}
 }
 
 func (c *Crit) MoveLeft() {
-	if c.w.CheckMove(c.pos.X-1, c.pos.Y) {
+	if c.w.CheckMove(c.pos.X-GRID_TO_PIXEL, c.pos.Y) {
 		c.pos.X -= GRID_TO_PIXEL
 	}
 }
 
 func (c *Crit) MoveRight() {
-	if c.w.CheckMove(c.pos.X+1, c.pos.Y) {
+	if c.w.CheckMove(c.pos.X+GRID_TO_PIXEL, c.pos.Y) {
 		c.pos.X += GRID_TO_PIXEL
 	}
 }

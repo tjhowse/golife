@@ -9,8 +9,8 @@ import (
 	gg "github.com/fogleman/gg"
 )
 
-const WORLD_HEIGHT = 1000
-const WORLD_WIDTH = 1000
+const WORLD_HEIGHT = 500
+const WORLD_WIDTH = 500
 const GRID_TO_PIXEL = 10
 
 type World struct {
@@ -78,10 +78,10 @@ func (w *World) GetRandomValidPosition() (x, y int) {
 }
 
 // Cull some of the crits in the world based on cruel, arbitrary rules.
-func (w *World) CullCrits() {
+func (w *World) CullCrits(left, right int) {
 	living := make([]*Crit, 0)
 	for _, c := range w.crits {
-		if c.pos.X > WORLD_WIDTH/2 {
+		if c.pos.X < left || c.pos.X > right {
 			living = append(living, c)
 		}
 	}
@@ -108,7 +108,6 @@ func (w *World) RandomiseCritPositions() {
 // This tops up the world to the provided number using mutated brains from
 // surviving crits.
 func (w *World) RefillCritsWithMutatedConnectomes(count int) {
-	w.RandomiseCritPositions()
 
 	critsToMake := count - len(w.crits)
 	for i := 0; i < critsToMake; i++ {
