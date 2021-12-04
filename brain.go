@@ -46,6 +46,9 @@ type Synapse struct {
 	to, from *Neuron
 }
 
+// http://neuralnetworksanddeeplearning.com/chap2.html
+// Re-read this and employ the wisdom within.
+
 func (s *Synapse) Tick() {
 	if s.from == nil || s.to == nil {
 		return
@@ -65,7 +68,12 @@ func (s *Synapse) Draw(dc *gg.Context) {
 	if s.from == nil || s.to == nil {
 		return
 	}
-	dc.SetRGB(0, 0, s.weight*1000)
+	if s.weight > 0 {
+		dc.SetRGB(0, 0, s.weight)
+	} else {
+		dc.SetRGB(s.weight, 0, 0)
+	}
+
 	dc.SetLineWidth(3)
 	dc.DrawLine(float64(s.from.x), float64(s.from.y), float64(s.to.x), float64(s.to.y))
 	// dc.SetStrokeStyle(gg.NewSolidPattern(color.RGB(0, 0, 0)))
@@ -242,7 +250,8 @@ func NewBrain(connectome Connectome) *Brain {
 	for i := 0; i < len(b.synapses); i++ {
 		b.synapses[i].from = valid_from_neurons[int(connectome.c[i*3])%len(valid_from_neurons)]
 		b.synapses[i].to = valid_to_neurons[int(connectome.c[i*3+1])%len(valid_to_neurons)]
-		b.synapses[i].weight = float64(connectome.c[i*3+2]) / float64(255)
+		// Interpret the third byte of the synapse as a signed 8-bit integer
+		b.synapses[i].weight = float64(int8(connectome.c[i*3+2])) / 128
 	}
 	return &b
 }
