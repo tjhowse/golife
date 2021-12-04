@@ -33,7 +33,9 @@ func (n *Neuron) Tick() {
 }
 
 func (n *Neuron) Draw(dc *gg.Context) {
-	dc.SetRGB(n.activation*1000, 0, 0)
+	dc.SetRGB(0, 0, 0)
+	dc.DrawString(fmt.Sprintf("%0.2f", n.activation), float64(n.x)-15, float64(n.y)-20)
+	dc.SetRGB(n.activation, 0, 0)
 	dc.DrawCircle(float64(n.x), float64(n.y), float64(10))
 	dc.Fill()
 }
@@ -49,6 +51,14 @@ func (s *Synapse) Tick() {
 		return
 	}
 	s.to.activation += s.weight * s.from.activation
+
+	if s.to.activation > 0 {
+		s.to.activation = 1
+	}
+	if s.to.activation < 0 {
+		s.to.activation = 0
+	}
+
 }
 
 func (s *Synapse) Draw(dc *gg.Context) {

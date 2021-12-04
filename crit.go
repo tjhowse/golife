@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"math/rand"
 
 	gg "github.com/fogleman/gg"
 	tj "github.com/tjhowse/tjgo"
@@ -25,6 +26,7 @@ func NewCrit(x, y, size int, c color.Color, w *World, connectome Connectome) *Cr
 	b.outputNeurons[1].function = crit.MoveDown
 	b.outputNeurons[2].function = crit.MoveLeft
 	b.outputNeurons[3].function = crit.MoveRight
+	b.outputNeurons[4].function = crit.MoveRandomly
 	return &crit
 }
 
@@ -50,6 +52,19 @@ func (c *Crit) MoveLeft() {
 func (c *Crit) MoveRight() {
 	if c.w.CheckMove(c.pos.X+1, c.pos.Y) {
 		c.pos.X += GRID_TO_PIXEL
+	}
+}
+
+func (c *Crit) MoveRandomly() {
+	switch rand.Intn(4) {
+	case 0:
+		c.MoveUp()
+	case 1:
+		c.MoveDown()
+	case 2:
+		c.MoveLeft()
+	case 3:
+		c.MoveRight()
 	}
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"image/color"
 	"math/rand"
 	"net/http"
 	"time"
@@ -25,6 +26,8 @@ func main() {
 	sim := Sim{}
 	// w := World{}
 	sim.w.AddRandomCrits(100)
+	sim.w.crits[0].c = color.RGBA{255, 0, 0, 255}
+	// sim.w.crits[0].c = color.RGB(255, 0, 0)
 
 	http.HandleFunc("/world", sim.w.ImgHandler)
 	http.HandleFunc("/brain", sim.BrainImgHandler)
