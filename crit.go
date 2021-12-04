@@ -18,9 +18,21 @@ type Crit struct {
 }
 
 // A factory function for creating crits.
-func NewCrit(x, y, size int, c color.Color, w *World, connectome Connectome) *Crit {
+func NewCrit(x, y, size int, w *World, connectome Connectome) *Crit {
 	b := NewBrain(connectome)
 	s := make([]float64, len(b.inputNeurons))
+	// c := color.Black
+	// Derive a colour from a connectome
+
+	var red uint8
+	var green uint8
+	var blue uint8
+	for i := 0; i < len(connectome.c)-3; i += 3 {
+		red += uint8(connectome.c[i])
+		green += uint8(connectome.c[i+1])
+		blue += uint8(connectome.c[i+2])
+	}
+	c := color.RGBA{red, green, blue, 255}
 	crit := Crit{tj.Vec2{X: x, Y: y}, GRID_TO_PIXEL / 2, c, w, b, s}
 	b.outputNeurons[0].function = crit.MoveUp
 	b.outputNeurons[1].function = crit.MoveDown

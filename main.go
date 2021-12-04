@@ -33,10 +33,10 @@ func main() {
 	http.Handle("/", http.FileServer(http.FS(content)))
 	go http.ListenAndServe("192.168.1.50:8082", nil)
 	for {
-		sim.w.Tick(1)
-		time.Sleep(time.Second)
-		// sim.w.CullCrits()
-		// println("Living: ", len(sim.w.crits))
-		// sim.w.RefillCritsWithMutatedConnectomes(100)
+		sim.w.Tick(1000)
+		time.Sleep(time.Second / 2)
+		sim.w.CullCrits()
+		println("Living: ", len(sim.w.crits))
+		sim.w.RefillCritsWithMutatedConnectomes(100)
 	}
 }

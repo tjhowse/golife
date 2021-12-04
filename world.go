@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"image/color"
 	"math/rand"
 	"net/http"
 
@@ -95,7 +94,7 @@ func (w *World) AddRandomCrits(count int) {
 		x, y := w.GetRandomValidPosition()
 		var connectome Connectome
 		connectome.Randomise()
-		w.AddCrit(NewCrit(x, y, GRID_TO_PIXEL, color.Black, w, connectome))
+		w.AddCrit(NewCrit(x, y, GRID_TO_PIXEL, w, connectome))
 	}
 }
 
@@ -117,7 +116,7 @@ func (w *World) RefillCritsWithMutatedConnectomes(count int) {
 		var connectome Connectome
 		connectome.CopyFrom(&w.crits[rand.Intn(len(w.crits))].b.connectome)
 		connectome.Mutate(10)
-		w.AddCrit(NewCrit(x, y, GRID_TO_PIXEL, color.Black, w, connectome))
+		w.AddCrit(NewCrit(x, y, GRID_TO_PIXEL, w, connectome))
 	}
 
 }

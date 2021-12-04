@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"math/rand"
 	"net/http"
 
@@ -12,11 +13,14 @@ import (
 const BRAIN_IMG_WIDTH = 500
 const BRAIN_IMG_HEIGHT = 500
 
+const SIGMOID_OUTPUT_ACTIVATION_THRESHOLD = 0.75
+
 type ActivationFunction func()
 
 type Neuron struct {
 	activation float64
-	threshold  float64
+	inputSum   float64
+	bias       float64
 	function   ActivationFunction
 	x, y       int
 }
@@ -27,7 +31,10 @@ func (n *Neuron) Tick() {
 	if n.function == nil {
 		return
 	}
-	if n.activation >= n.threshold {
+	// Do the sigmoid calc here to turn inputSum into activation
+	n.activation = 1 / (1 + math.Exp(-n.inputSum-n.bias))
+	n.inputSum = 0
+	if n.activation >= SIGMOID_OUTPUT_ACTIVATION_THRESHOLD {
 		n.function()
 	}
 }
@@ -53,15 +60,7 @@ func (s *Synapse) Tick() {
 	if s.from == nil || s.to == nil {
 		return
 	}
-	s.to.activation += s.weight * s.from.activation
-
-	if s.to.activation > 0 {
-		s.to.activation = 1
-	}
-	if s.to.activation < 0 {
-		s.to.activation = 0
-	}
-
+	s.to.inputSum += s.weight * s.from.activation
 }
 
 func (s *Synapse) Draw(dc *gg.Context) {
@@ -178,9 +177,15 @@ func (b *Brain) Tick(senses []float64) {
 		b.inputNeurons[i].activation = s
 	}
 
-	// Tick all the synapses to propagate the activation levels.
+	// Tick all the synapses to propagate the input sums to prepare for ticking
+	// the neurons.
 	for i := 0; i < len(b.synapses); i++ {
 		b.synapses[i].Tick()
+	}
+
+	// Process internal neurons
+	for i := 0; i < len(b.internalNeurons); i++ {
+		b.internalNeurons[i].Tick()
 	}
 
 	// Process output neurons
@@ -221,9 +226,9 @@ func NewBrain(connectome Connectome) *Brain {
 	// Set where the neurons are displayed in the brain image.
 	b.SetNeuronPositions()
 
-	// Set a starting threshold of 0.5 for all neurons.
+	// Set a starting bias of 0.5 for all neurons.
 	for i := 0; i < len(b.inputNeurons); i++ {
-		b.outputNeurons[i].threshold = 0.5
+		b.outputNeurons[i].bias = 0.5
 	}
 	b.synapses = make([]Synapse, SYNAPSE_COUNT)
 
