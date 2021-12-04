@@ -220,7 +220,7 @@ func NewBrain(connectome Connectome) *Brain {
 	// Internal neurons can have connections to and from them
 	for i := 0; i < INTERNAL_NEURON_COUNT; i++ {
 		valid_from_neurons = append(valid_from_neurons, &b.internalNeurons[i])
-		valid_to_neurons = append(valid_to_neurons, &b.inputNeurons[i])
+		valid_to_neurons = append(valid_to_neurons, &b.internalNeurons[i])
 	}
 	// Output neurons can only have connections to them
 	for i := 0; i < OUTPUT_NEURONS_COUNT; i++ {
