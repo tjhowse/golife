@@ -57,6 +57,7 @@ func (c *Crit) MoveRight() {
 func (c *Crit) Draw(dc *gg.Context) {
 	dc.SetColor(c.c)
 	dc.DrawCircle(float64(c.pos.X), float64(c.pos.Y), float64(c.size))
+	dc.Fill()
 }
 
 // Update the crit's body and brain.

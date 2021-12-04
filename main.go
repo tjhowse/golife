@@ -12,19 +12,29 @@ import (
 //go:embed static/script.js
 var content embed.FS
 
+type Sim struct {
+	w World
+}
+
+func (s *Sim) BrainImgHandler(response http.ResponseWriter, request *http.Request) {
+	s.w.crits[0].b.ImgHandler(response, request)
+}
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	w := World{}
-	w.AddRandomCrits(100)
+	sim := Sim{}
+	// w := World{}
+	sim.w.AddRandomCrits(100)
 
-	http.HandleFunc("/img", w.ImgHandler)
+	http.HandleFunc("/world", sim.w.ImgHandler)
+	http.HandleFunc("/brain", sim.BrainImgHandler)
 	http.Handle("/", http.FileServer(http.FS(content)))
 	go http.ListenAndServe("192.168.1.50:8082", nil)
 	for {
-		w.Tick(1000)
+		sim.w.Tick(1)
 		time.Sleep(time.Second)
-		w.CullCrits()
-		println("Living: ", len(w.crits))
-		w.RefillCritsWithMutatedConnectomes(100)
+		// sim.w.CullCrits()
+		// println("Living: ", len(sim.w.crits))
+		// sim.w.RefillCritsWithMutatedConnectomes(100)
 	}
 }

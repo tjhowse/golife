@@ -1,8 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"math/rand"
+	"net/http"
+
+	gg "github.com/fogleman/gg"
 )
+
+const BRAIN_IMG_WIDTH = 500
+const BRAIN_IMG_HEIGHT = 500
 
 type ActivationFunction func()
 
@@ -10,6 +18,7 @@ type Neuron struct {
 	activation float64
 	threshold  float64
 	function   ActivationFunction
+	x, y       int
 }
 
 // Check if the neuron's bound function needs to be fired
@@ -21,6 +30,12 @@ func (n *Neuron) Tick() {
 	if n.activation >= n.threshold {
 		n.function()
 	}
+}
+
+func (n *Neuron) Draw(dc *gg.Context) {
+	dc.SetRGB(n.activation*1000, 0, 0)
+	dc.DrawCircle(float64(n.x), float64(n.y), float64(10))
+	dc.Fill()
 }
 
 // Used to connect neurons on the brain.
@@ -36,12 +51,74 @@ func (s *Synapse) Tick() {
 	s.to.activation += s.weight * s.from.activation
 }
 
+func (s *Synapse) Draw(dc *gg.Context) {
+	if s.from == nil || s.to == nil {
+		return
+	}
+	dc.SetRGB(0, 0, s.weight*1000)
+	dc.SetLineWidth(3)
+	dc.DrawLine(float64(s.from.x), float64(s.from.y), float64(s.to.x), float64(s.to.y))
+	// dc.SetStrokeStyle(gg.NewSolidPattern(color.RGB(0, 0, 0)))
+	dc.Stroke()
+}
+
 type Brain struct {
 	inputNeurons    []Neuron
 	internalNeurons []Neuron
 	outputNeurons   []Neuron
 	synapses        []Synapse
 	connectome      Connectome
+}
+
+// Draw the brain to the provided buffer as PNG.
+func (b *Brain) Draw(o *bytes.Buffer) {
+	dc := gg.NewContext(BRAIN_IMG_WIDTH, BRAIN_IMG_HEIGHT)
+	for i := 0; i < len(b.inputNeurons); i++ {
+		b.inputNeurons[i].Draw(dc)
+	}
+	for i := 0; i < len(b.internalNeurons); i++ {
+		b.internalNeurons[i].Draw(dc)
+	}
+	for i := 0; i < len(b.outputNeurons); i++ {
+		b.outputNeurons[i].Draw(dc)
+	}
+	for i := 0; i < len(b.synapses); i++ {
+		b.synapses[i].Draw(dc)
+	}
+	dc.EncodePNG(o)
+}
+
+// Draw the brain to the provided buffer as PNG.
+func (b *Brain) SetNeuronPositions() {
+	y_spacing := BRAIN_IMG_HEIGHT / 4
+	y := y_spacing
+	x_spacing := BRAIN_IMG_WIDTH / (len(b.inputNeurons) + 1)
+	// x := x_spacing
+	for i := 0; i < len(b.inputNeurons); i++ {
+		b.inputNeurons[i].x = x_spacing * (i + 1)
+		b.inputNeurons[i].y = y
+	}
+	y += y_spacing
+	x_spacing = BRAIN_IMG_WIDTH / (len(b.internalNeurons) + 1)
+	for i := 0; i < len(b.internalNeurons); i++ {
+		b.internalNeurons[i].x = x_spacing * (i + 1)
+		b.internalNeurons[i].y = y
+	}
+	y += y_spacing
+	x_spacing = BRAIN_IMG_WIDTH / (len(b.outputNeurons) + 1)
+	for i := 0; i < len(b.outputNeurons); i++ {
+		b.outputNeurons[i].x = x_spacing * (i + 1)
+		b.outputNeurons[i].y = y
+	}
+}
+
+// Handles serving the world as a png to the webserver
+func (b *Brain) ImgHandler(response http.ResponseWriter, request *http.Request) {
+	buff := bytes.Buffer{}
+	b.Draw(&buff)
+	response.Header().Set("Content-Length", fmt.Sprint(buff.Len()))
+	response.Header().Set("Content-Type", "image/png")
+	response.Write(buff.Bytes())
 }
 
 type Connectome struct {
@@ -122,6 +199,9 @@ func NewBrain(connectome Connectome) *Brain {
 	b.inputNeurons = make([]Neuron, INPUT_NEURON_COUNT)
 	b.internalNeurons = make([]Neuron, INTERNAL_NEURON_COUNT)
 	b.outputNeurons = make([]Neuron, OUTPUT_NEURONS_COUNT)
+
+	// Set where the neurons are displayed in the brain image.
+	b.SetNeuronPositions()
 
 	// Set a starting threshold of 0.5 for all neurons.
 	for i := 0; i < len(b.inputNeurons); i++ {

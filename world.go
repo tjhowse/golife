@@ -54,8 +54,8 @@ func (w *World) Draw(o *bytes.Buffer) {
 	for i := 0; i < len(w.crits); i++ {
 		w.crits[i].Draw(dc)
 	}
-	dc.SetRGB(0, 0, 0)
-	dc.Fill()
+	// dc.SetRGB(0, 0, 0)
+	// dc.Fill()
 	dc.EncodePNG(o)
 }
 
