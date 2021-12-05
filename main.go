@@ -12,6 +12,8 @@ import (
 	"github.com/tjhowse/tjgo"
 )
 
+// _ "net/http/pprof" # /debug/pprof/
+
 // For the record I do not approve of this kind of funky metaprogramming nonsense.
 //go:embed static/index.html
 //go:embed static/script.js
