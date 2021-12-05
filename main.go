@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	gg "github.com/fogleman/gg"
 	"github.com/tjhowse/tjgo"
 )
 
@@ -27,10 +28,12 @@ func main() {
 	sim := Sim{}
 	displayedBrain := 0
 	// w := World{}
+	sim.w.dc = gg.NewContext(WORLD_WIDTH*GRID_TO_PIXEL, WORLD_HEIGHT*GRID_TO_PIXEL)
 	sim.w.AddRandomCrits(CRIT_COUNT)
 
 	http.HandleFunc("/world", sim.w.ImgHandler)
 	http.HandleFunc("/brain", func(response http.ResponseWriter, request *http.Request) {
+		// return
 		if displayedBrain >= len(sim.w.crits) {
 			return
 		}

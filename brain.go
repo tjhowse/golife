@@ -91,28 +91,31 @@ type Brain struct {
 	outputNeurons   []Neuron
 	synapses        []Synapse
 	connectome      Connectome
+	dc              *gg.Context
 }
 
 // Draw the brain to the provided buffer as PNG.
 func (b *Brain) Draw(o *bytes.Buffer) {
-	dc := gg.NewContext(BRAIN_IMG_WIDTH, BRAIN_IMG_HEIGHT)
-	dc.SetRGB(0, 0, 0)
-	dc.DrawString("In:", 0, BRAIN_IMG_HEIGHT/4)
-	dc.DrawString("Internal:", 0, 2*BRAIN_IMG_HEIGHT/4)
-	dc.DrawString("Out:", 0, 3*BRAIN_IMG_HEIGHT/4)
+	// dc := gg.NewContext(BRAIN_IMG_WIDTH, BRAIN_IMG_HEIGHT)
+	b.dc.SetRGB(1, 1, 1)
+	b.dc.Clear()
+	b.dc.SetRGB(0, 0, 0)
+	b.dc.DrawString("In:", 0, BRAIN_IMG_HEIGHT/4)
+	b.dc.DrawString("Internal:", 0, 2*BRAIN_IMG_HEIGHT/4)
+	b.dc.DrawString("Out:", 0, 3*BRAIN_IMG_HEIGHT/4)
 	for i := 0; i < len(b.inputNeurons); i++ {
-		b.inputNeurons[i].Draw(dc)
+		b.inputNeurons[i].Draw(b.dc)
 	}
 	for i := 0; i < len(b.internalNeurons); i++ {
-		b.internalNeurons[i].Draw(dc)
+		b.internalNeurons[i].Draw(b.dc)
 	}
 	for i := 0; i < len(b.outputNeurons); i++ {
-		b.outputNeurons[i].Draw(dc)
+		b.outputNeurons[i].Draw(b.dc)
 	}
 	for i := 0; i < len(b.synapses); i++ {
-		b.synapses[i].Draw(dc)
+		b.synapses[i].Draw(b.dc)
 	}
-	dc.EncodePNG(o)
+	b.dc.EncodePNG(o)
 }
 
 // Set the positions of the neurons in the drawn image.
@@ -238,6 +241,7 @@ func NewBrain(connectome Connectome) *Brain {
 
 	b := Brain{}
 	b.connectome = connectome
+	b.dc = gg.NewContext(BRAIN_IMG_WIDTH, BRAIN_IMG_HEIGHT)
 
 	// Create the neurons in the brain.
 	b.inputNeurons = make([]Neuron, INPUT_NEURON_COUNT)

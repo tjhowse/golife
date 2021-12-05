@@ -7,7 +7,7 @@ function update() {
         timestamp = (new Date()).getTime(),
         newUrl = source + '?_=' + timestamp;
     document.getElementById("brain").src = newUrl;
-    setTimeout(update, 100);
+    setTimeout(update, 1000);
 }
 
 update();

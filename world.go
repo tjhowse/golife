@@ -17,6 +17,7 @@ const GRID_TO_PIXEL = 10
 type World struct {
 	crits  []*Crit
 	frames int // The number of frames that have passed
+	dc     *gg.Context
 }
 
 // Add a crit to the world.
@@ -49,14 +50,16 @@ func (w *World) CheckMove(x, y int) bool {
 
 // Draw the world to the provided buffer as PNG.
 func (w *World) Draw(o *bytes.Buffer) {
-	dc := gg.NewContext(WORLD_WIDTH*GRID_TO_PIXEL, WORLD_HEIGHT*GRID_TO_PIXEL)
+	// dc := gg.NewContext(WORLD_WIDTH*GRID_TO_PIXEL, WORLD_HEIGHT*GRID_TO_PIXEL)
+	w.dc.SetRGB(1, 1, 1)
+	w.dc.Clear()
 
 	for i := 0; i < len(w.crits); i++ {
-		w.crits[i].Draw(dc)
+		w.crits[i].Draw(w.dc)
 	}
 	// dc.SetRGB(0, 0, 0)
 	// dc.Fill()
-	dc.EncodePNG(o)
+	w.dc.EncodePNG(o)
 }
 
 // Handles serving the world as a png to the webserver
