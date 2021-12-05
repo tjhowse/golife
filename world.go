@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	gg "github.com/fogleman/gg"
+	"github.com/tjhowse/tjgo"
 )
 
 const WORLD_HEIGHT = 50
@@ -123,4 +124,23 @@ func (w *World) RefillCritsWithMutatedConnectomes(count int) {
 		w.AddCrit(NewCrit(x, y, GRID_TO_PIXEL, w, connectome))
 	}
 
+}
+
+func (w *World) GetCritIndexClosestToImgClick(x, y int) (int, error) {
+	var closest int
+	var closestDist = float64(1000000)
+	if len(w.crits) == 0 {
+		return -1, fmt.Errorf("no crits in world")
+	}
+
+	for i, c := range w.crits {
+		critPos := c.pos
+		critPos.Scale(10)
+		dist := critPos.Distance(tjgo.Vec2{X: x, Y: y})
+		if dist < closestDist {
+			closest = i
+			closestDist = dist
+		}
+	}
+	return closest, nil
 }

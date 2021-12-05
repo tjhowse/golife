@@ -4,9 +4,15 @@
     <!-- <meta http-equiv="refresh" content="1"/> -->
   </head>
   <body>
-    <img src="/world" alt="World" id="world">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <img src="/world" alt="World" id="world" ismap><br>
+    Click a crit to view its brain.<br>
     <img src="/brain" alt="Brain" id="brain"><br>
     <button id="start"onclick="request('/restart')">Restart</button>
+    <button id="start"onclick="request('/tick?ticks=1000')">1000 ticks</button>
+    <button id="start"onclick="request('/cull')">Cull population</button>
+    <button id="start"onclick="request('/topUp')">Top up population</button>
+    <button id="start"onclick="request('/cycles')">10 Cycles</button>
   </body>
   <script src="script.js"></script>
 </html>
