@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"image/color"
 	"math/rand"
 	"net/http"
 	"time"
@@ -17,10 +16,6 @@ type Sim struct {
 	w World
 }
 
-func (s *Sim) BrainImgHandler(response http.ResponseWriter, request *http.Request) {
-	s.w.crits[0].b.ImgHandler(response, request)
-}
-
 const CRIT_COUNT = 100
 
 func main() {
@@ -28,10 +23,11 @@ func main() {
 	sim := Sim{}
 	// w := World{}
 	sim.w.AddRandomCrits(CRIT_COUNT)
-	sim.w.crits[0].c = color.RGBA{255, 0, 0, 255}
 
 	http.HandleFunc("/world", sim.w.ImgHandler)
-	http.HandleFunc("/brain", sim.BrainImgHandler)
+	http.HandleFunc("/brain", func(response http.ResponseWriter, request *http.Request) {
+		sim.w.crits[0].b.ImgHandler(response, request)
+	})
 	http.HandleFunc("/restart", func(response http.ResponseWriter, request *http.Request) {
 		sim.w.CullCrits(0, WORLD_WIDTH)
 		sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
@@ -39,11 +35,11 @@ func main() {
 	http.Handle("/", http.FileServer(http.FS(content)))
 	go http.ListenAndServe("192.168.1.50:8082", nil)
 	for {
-		sim.w.Tick(1)
-		time.Sleep(time.Second / 2)
-		// sim.w.CullCrits(CRIT_COUNT/WORLD_HEIGHT, WORLD_WIDTH)
-		// println("Living: ", len(sim.w.crits))
-		// sim.w.RandomiseCritPositions()
-		// sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
+		sim.w.Tick(1000)
+		// time.Sleep(time.Second / 2)
+		sim.w.CullCrits(CRIT_COUNT/WORLD_HEIGHT, WORLD_WIDTH)
+		println("Living: ", len(sim.w.crits))
+		sim.w.RandomiseCritPositions()
+		sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
 	}
 }

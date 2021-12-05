@@ -25,6 +25,7 @@ type Neuron struct {
 	x, y        int
 	debugTop    string
 	debugBottom string
+	label       string
 }
 
 // Check if the neuron's bound function needs to be fired
@@ -47,6 +48,7 @@ func (n *Neuron) Draw(dc *gg.Context) {
 	dc.SetRGB(0, 0, 0)
 	dc.DrawString(n.debugTop, float64(n.x)-15, float64(n.y)-20)
 	dc.DrawString(n.debugBottom, float64(n.x)-15, float64(n.y)+25)
+	dc.DrawString(n.label, float64(n.x)-15, float64(n.y)+50)
 	dc.SetRGB(n.activation, 0, 0)
 	dc.DrawCircle(float64(n.x), float64(n.y), float64(10))
 	dc.Fill()
@@ -78,9 +80,8 @@ func (s *Synapse) Draw(dc *gg.Context) {
 		dc.SetRGB(s.weight, 0, 0)
 	}
 
-	dc.SetLineWidth(3)
+	dc.SetLineWidth(2)
 	dc.DrawLine(float64(s.from.x), float64(s.from.y), float64(s.to.x), float64(s.to.y))
-	// dc.SetStrokeStyle(gg.NewSolidPattern(color.RGB(0, 0, 0)))
 	dc.Stroke()
 }
 

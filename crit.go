@@ -35,10 +35,15 @@ func NewCrit(x, y, size int, w *World, connectome Connectome) *Crit {
 	c := color.RGBA{red, green, blue, 255}
 	crit := Crit{tj.Vec2{X: x, Y: y}, GRID_TO_PIXEL / 2, c, w, b, s}
 	b.outputNeurons[0].function = crit.MoveUp
+	b.outputNeurons[0].label = "Up"
 	b.outputNeurons[1].function = crit.MoveDown
+	b.outputNeurons[1].label = "Down"
 	b.outputNeurons[2].function = crit.MoveLeft
+	b.outputNeurons[2].label = "Left"
 	b.outputNeurons[3].function = crit.MoveRight
+	b.outputNeurons[3].label = "Right"
 	b.outputNeurons[4].function = crit.MoveRandomly
+	b.outputNeurons[4].label = "Random"
 	return &crit
 }
 
