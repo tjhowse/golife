@@ -18,11 +18,13 @@ const SIGMOID_OUTPUT_ACTIVATION_THRESHOLD = 0.75
 type ActivationFunction func()
 
 type Neuron struct {
-	activation float64
-	inputSum   float64
-	bias       float64
-	function   ActivationFunction
-	x, y       int
+	activation  float64
+	inputSum    float64
+	bias        float64
+	function    ActivationFunction
+	x, y        int
+	debugTop    string
+	debugBottom string
 }
 
 // Check if the neuron's bound function needs to be fired
@@ -33,15 +35,18 @@ func (n *Neuron) Tick() {
 	}
 	// Do the sigmoid calc here to turn inputSum into activation
 	n.activation = 1 / (1 + math.Exp(-n.inputSum-n.bias))
-	n.inputSum = 0
 	if n.activation >= SIGMOID_OUTPUT_ACTIVATION_THRESHOLD {
 		n.function()
 	}
+	n.debugTop = fmt.Sprintf("%0.2f", n.activation)
+	n.debugBottom = fmt.Sprintf("%0.2f", n.bias)
+	n.inputSum = 0
 }
 
 func (n *Neuron) Draw(dc *gg.Context) {
 	dc.SetRGB(0, 0, 0)
-	dc.DrawString(fmt.Sprintf("%0.2f", n.activation), float64(n.x)-15, float64(n.y)-20)
+	dc.DrawString(n.debugTop, float64(n.x)-15, float64(n.y)-20)
+	dc.DrawString(n.debugBottom, float64(n.x)-15, float64(n.y)+25)
 	dc.SetRGB(n.activation, 0, 0)
 	dc.DrawCircle(float64(n.x), float64(n.y), float64(10))
 	dc.Fill()
@@ -105,7 +110,7 @@ func (b *Brain) Draw(o *bytes.Buffer) {
 	dc.EncodePNG(o)
 }
 
-// Draw the brain to the provided buffer as PNG.
+// Set the positions of the neurons in the drawn image.
 func (b *Brain) SetNeuronPositions() {
 	y_spacing := BRAIN_IMG_HEIGHT / 4
 	y := y_spacing
@@ -138,8 +143,10 @@ func (b *Brain) ImgHandler(response http.ResponseWriter, request *http.Request) 
 	response.Write(buff.Bytes())
 }
 
+// Think of this as a blob of entropy used to hook up a brain.
 type Connectome struct {
-	c [32]byte
+	c [64]byte
+	i uint8
 }
 
 // Randomise this connectome.
@@ -163,6 +170,15 @@ func (c *Connectome) Mutate(bitsToFlip int) {
 // Copy from the provided connectome into this one.
 func (c *Connectome) CopyFrom(t *Connectome) {
 	copy(c.c[:], t.c[:])
+}
+
+func (c *Connectome) GetByte() byte {
+	b := c.c[c.i]
+	c.i++
+	if c.i >= uint8(len(c.c)) {
+		panic("Ran out of bytes in the connectome")
+	}
+	return b
 }
 
 // Tick the brain.
@@ -226,37 +242,42 @@ func NewBrain(connectome Connectome) *Brain {
 	// Set where the neurons are displayed in the brain image.
 	b.SetNeuronPositions()
 
-	// Set a starting bias of 0.5 for all neurons.
-	for i := 0; i < len(b.inputNeurons); i++ {
-		b.outputNeurons[i].bias = 0.5
-	}
 	b.synapses = make([]Synapse, SYNAPSE_COUNT)
 
 	// Make some helper slices to help with allocating synapses.
 	valid_from_neurons := make([]*Neuron, 0)
 	valid_to_neurons := make([]*Neuron, 0)
+	all_neurons := make([]*Neuron, 0)
 
 	// We can only wire from input neurons
 	for i := 0; i < INPUT_NEURON_COUNT; i++ {
 		valid_from_neurons = append(valid_from_neurons, &b.inputNeurons[i])
+		all_neurons = append(all_neurons, &b.inputNeurons[i])
 	}
 	// Internal neurons can have connections to and from them
 	for i := 0; i < INTERNAL_NEURON_COUNT; i++ {
 		valid_from_neurons = append(valid_from_neurons, &b.internalNeurons[i])
 		valid_to_neurons = append(valid_to_neurons, &b.internalNeurons[i])
+		all_neurons = append(all_neurons, &b.internalNeurons[i])
 	}
 	// Output neurons can only have connections to them
 	for i := 0; i < OUTPUT_NEURONS_COUNT; i++ {
 		valid_to_neurons = append(valid_to_neurons, &b.outputNeurons[i])
+		all_neurons = append(all_neurons, &b.outputNeurons[i])
+	}
+	for i := 0; i < len(all_neurons); i++ {
+		all_neurons[i].bias = float64(int8(b.connectome.GetByte())) / 128
 	}
 
+	// Create the synapses
 	// For each synapse, assign a from and to neuron, and a weight, using three
 	// bytes from the connectome.
 	for i := 0; i < len(b.synapses); i++ {
-		b.synapses[i].from = valid_from_neurons[int(connectome.c[i*3])%len(valid_from_neurons)]
-		b.synapses[i].to = valid_to_neurons[int(connectome.c[i*3+1])%len(valid_to_neurons)]
+		b.synapses[i].from = valid_from_neurons[int(b.connectome.GetByte())%len(valid_from_neurons)]
+		b.synapses[i].to = valid_to_neurons[int(b.connectome.GetByte())%len(valid_to_neurons)]
 		// Interpret the third byte of the synapse as a signed 8-bit integer
-		b.synapses[i].weight = float64(int8(connectome.c[i*3+2])) / 128
+		b.synapses[i].weight = float64(int8(b.connectome.GetByte())) / 128
+		// TODO Set the bias on neurons
 	}
 	return &b
 }

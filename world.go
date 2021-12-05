@@ -71,8 +71,8 @@ func (w *World) ImgHandler(response http.ResponseWriter, request *http.Request) 
 // Get a random position on the world that is not occupied by a crit.
 func (w *World) GetRandomValidPosition() (x, y int) {
 	for x, y = -1, -1; !w.CheckMove(x, y); {
-		x = rand.Intn(WORLD_HEIGHT)
-		y = rand.Intn(WORLD_WIDTH)
+		x = rand.Intn(WORLD_WIDTH)
+		y = rand.Intn(WORLD_HEIGHT)
 	}
 	return x, y
 }
@@ -113,8 +113,13 @@ func (w *World) RefillCritsWithMutatedConnectomes(count int) {
 	for i := 0; i < critsToMake; i++ {
 		x, y := w.GetRandomValidPosition()
 		var connectome Connectome
-		connectome.CopyFrom(&w.crits[rand.Intn(len(w.crits))].b.connectome)
-		connectome.Mutate(10)
+		if len(w.crits) > 0 {
+			// Everyone died :(
+			connectome.CopyFrom(&w.crits[rand.Intn(len(w.crits))].b.connectome)
+			connectome.Mutate(10)
+		} else {
+			connectome.Randomise()
+		}
 		w.AddCrit(NewCrit(x, y, GRID_TO_PIXEL, w, connectome))
 	}
 

@@ -32,14 +32,18 @@ func main() {
 
 	http.HandleFunc("/world", sim.w.ImgHandler)
 	http.HandleFunc("/brain", sim.BrainImgHandler)
+	http.HandleFunc("/restart", func(response http.ResponseWriter, request *http.Request) {
+		sim.w.CullCrits(0, WORLD_WIDTH)
+		sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
+	})
 	http.Handle("/", http.FileServer(http.FS(content)))
 	go http.ListenAndServe("192.168.1.50:8082", nil)
 	for {
-		sim.w.Tick(1000)
+		sim.w.Tick(1)
 		time.Sleep(time.Second / 2)
-		sim.w.CullCrits(WORLD_WIDTH/8, WORLD_WIDTH)
-		println("Living: ", len(sim.w.crits))
-		sim.w.RandomiseCritPositions()
-		sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
+		// sim.w.CullCrits(CRIT_COUNT/WORLD_HEIGHT, WORLD_WIDTH)
+		// println("Living: ", len(sim.w.crits))
+		// sim.w.RandomiseCritPositions()
+		// sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
 	}
 }

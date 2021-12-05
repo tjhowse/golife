@@ -11,3 +11,10 @@ function update() {
 }
 
 update();
+
+
+function request(endpoint) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('get', endpoint, true);
+    xhr.send();
+}
