@@ -96,6 +96,10 @@ type Brain struct {
 // Draw the brain to the provided buffer as PNG.
 func (b *Brain) Draw(o *bytes.Buffer) {
 	dc := gg.NewContext(BRAIN_IMG_WIDTH, BRAIN_IMG_HEIGHT)
+	dc.SetRGB(0, 0, 0)
+	dc.DrawString("In:", 0, BRAIN_IMG_HEIGHT/4)
+	dc.DrawString("Internal:", 0, 2*BRAIN_IMG_HEIGHT/4)
+	dc.DrawString("Out:", 0, 3*BRAIN_IMG_HEIGHT/4)
 	for i := 0; i < len(b.inputNeurons); i++ {
 		b.inputNeurons[i].Draw(dc)
 	}
