@@ -111,22 +111,21 @@ func (w *World) RandomiseCritPositions() {
 
 // This tops up the world to the provided number using mutated brains from
 // surviving crits.
-func (w *World) RefillCritsWithMutatedConnectomes(count int) {
+func (w *World) RefillCritsWithMutatedConnectomes(count int, mutations int) {
 
 	critsToMake := count - len(w.crits)
 	for i := 0; i < critsToMake; i++ {
 		x, y := w.GetRandomValidPosition()
 		var connectome Connectome
 		if len(w.crits) > 0 {
-			// Everyone died :(
 			connectome.CopyFrom(&w.crits[rand.Intn(len(w.crits))].b.connectome)
-			connectome.Mutate(10)
+			connectome.Mutate(mutations)
 		} else {
+			// Everyone died :(
 			connectome.Randomise()
 		}
 		w.AddCrit(NewCrit(x, y, GRID_TO_PIXEL, w, connectome))
 	}
-
 }
 
 func (w *World) GetCritIndexClosestToImgClick(x, y int) (int, error) {

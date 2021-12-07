@@ -3,8 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"math"
-	"math/rand"
 	"net/http"
 
 	gg "github.com/fogleman/gg"
@@ -15,75 +13,10 @@ const BRAIN_IMG_HEIGHT = 500
 
 const SIGMOID_OUTPUT_ACTIVATION_THRESHOLD = 0.75
 
-type ActivationFunction func()
-
-type Neuron struct {
-	activation  float64
-	inputSum    float64
-	bias        float64
-	function    ActivationFunction
-	x, y        int
-	debugTop    string
-	debugBottom string
-	label       string
-}
-
-// Check if the neuron's bound function needs to be fired
-// based on its activation level.
-func (n *Neuron) Tick() {
-	if n.function == nil {
-		return
-	}
-	// Do the sigmoid calc here to turn inputSum into activation
-	n.activation = 1 / (1 + math.Exp(-n.inputSum-n.bias))
-	if n.activation >= SIGMOID_OUTPUT_ACTIVATION_THRESHOLD {
-		n.function()
-	}
-	n.debugTop = fmt.Sprintf("%0.2f", n.activation)
-	n.debugBottom = fmt.Sprintf("%0.2f", n.bias)
-	n.inputSum = 0
-}
-
-func (n *Neuron) Draw(dc *gg.Context) {
-	dc.SetRGB(0, 0, 0)
-	dc.DrawString(n.debugTop, float64(n.x)-15, float64(n.y)-20)
-	dc.DrawString(n.debugBottom, float64(n.x)-15, float64(n.y)+25)
-	dc.DrawString(n.label, float64(n.x)-15, float64(n.y)+50)
-	dc.SetRGB(n.activation, 0, 0)
-	dc.DrawCircle(float64(n.x), float64(n.y), float64(10))
-	dc.Fill()
-}
-
-// Used to connect neurons on the brain.
-type Synapse struct {
-	weight   float64
-	to, from *Neuron
-}
-
-// http://neuralnetworksanddeeplearning.com/chap2.html
-// Re-read this and employ the wisdom within.
-
-func (s *Synapse) Tick() {
-	if s.from == nil || s.to == nil {
-		return
-	}
-	s.to.inputSum += s.weight * s.from.activation
-}
-
-func (s *Synapse) Draw(dc *gg.Context) {
-	if s.from == nil || s.to == nil {
-		return
-	}
-	if s.weight > 0 {
-		dc.SetRGB(0, 0, s.weight)
-	} else {
-		dc.SetRGB(s.weight, 0, 0)
-	}
-
-	dc.SetLineWidth(2)
-	dc.DrawLine(float64(s.from.x), float64(s.from.y), float64(s.to.x), float64(s.to.y))
-	dc.Stroke()
-}
+const INPUT_NEURON_COUNT = 6
+const INTERNAL_NEURON_COUNT = 5
+const OUTPUT_NEURONS_COUNT = 6
+const SYNAPSE_COUNT = 10
 
 type Brain struct {
 	inputNeurons    []Neuron
@@ -151,44 +84,6 @@ func (b *Brain) ImgHandler(response http.ResponseWriter, request *http.Request) 
 	response.Write(buff.Bytes())
 }
 
-// Think of this as a blob of entropy used to hook up a brain.
-type Connectome struct {
-	c [64]byte
-	i uint8
-}
-
-// Randomise this connectome.
-func (c *Connectome) Randomise() {
-	rand.Read(c.c[:])
-}
-
-// Flip a number of bits at random in this connectome.
-func (c *Connectome) Mutate(bitsToFlip int) {
-	for i := 0; i < bitsToFlip; i++ {
-		byteToFlip := rand.Intn(len(c.c))
-		bitToFlip := rand.Intn(8)
-		if c.c[byteToFlip]&(1<<bitToFlip) != 0 {
-			c.c[byteToFlip] ^= 1 << bitToFlip
-		} else {
-			c.c[byteToFlip] |= 1 << bitToFlip
-		}
-	}
-}
-
-// Copy from the provided connectome into this one.
-func (c *Connectome) CopyFrom(t *Connectome) {
-	copy(c.c[:], t.c[:])
-}
-
-func (c *Connectome) GetByte() byte {
-	b := c.c[c.i]
-	c.i++
-	if c.i >= uint8(len(c.c)) {
-		panic("Ran out of bytes in the connectome")
-	}
-	return b
-}
-
 // Tick the brain.
 func (b *Brain) Tick(senses []float64) {
 	// Process input neurons
@@ -217,11 +112,6 @@ func (b *Brain) Tick(senses []float64) {
 		b.outputNeurons[i].Tick()
 	}
 }
-
-const INPUT_NEURON_COUNT = 6
-const INTERNAL_NEURON_COUNT = 2
-const OUTPUT_NEURONS_COUNT = 6
-const SYNAPSE_COUNT = 10
 
 func NewBrain(connectome Connectome) *Brain {
 
@@ -286,7 +176,6 @@ func NewBrain(connectome Connectome) *Brain {
 		b.synapses[i].to = valid_to_neurons[int(b.connectome.GetByte())%len(valid_to_neurons)]
 		// Interpret the third byte of the synapse as a signed 8-bit integer
 		b.synapses[i].weight = float64(int8(b.connectome.GetByte())) / 128
-		// TODO Set the bias on neurons
 	}
 	return &b
 }

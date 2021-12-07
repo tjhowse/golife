@@ -43,7 +43,7 @@ func main() {
 	})
 	http.HandleFunc("/restart", func(response http.ResponseWriter, request *http.Request) {
 		sim.w.CullCrits(0, WORLD_WIDTH)
-		sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
+		sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT, 10)
 	})
 	http.HandleFunc("/click", func(response http.ResponseWriter, request *http.Request) {
 		u, err := url.Parse(request.URL.String())
@@ -90,7 +90,7 @@ func main() {
 	})
 	http.HandleFunc("/topUp", func(response http.ResponseWriter, request *http.Request) {
 		sim.w.RandomiseCritPositions()
-		sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
+		sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT, 10)
 	})
 	http.HandleFunc("/cycles", func(response http.ResponseWriter, request *http.Request) {
 		displayedBrain = 0
@@ -98,17 +98,42 @@ func main() {
 			sim.w.Tick(1000)
 			sim.w.CullCrits(CRIT_COUNT/WORLD_HEIGHT, WORLD_WIDTH)
 			sim.w.RandomiseCritPositions()
-			sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
+			sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT, 10)
 		}
 	})
 	http.Handle("/", http.FileServer(http.FS(content)))
 	go http.ListenAndServe("192.168.1.50:8082", nil)
+
+	// safeZoneWidth := CRIT_COUNT/WORLD_HEIGHT
+	safeZoneWidth := WORLD_WIDTH / 2
+	stepCount := 0
+	mutationRate := 10
 	for {
-		sim.w.Tick(1)
-		time.Sleep(time.Second / 2)
-		// sim.w.CullCrits(CRIT_COUNT/WORLD_HEIGHT, WORLD_WIDTH)
-		// println("Living: ", len(sim.w.crits))
-		// sim.w.RandomiseCritPositions()
-		// sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT)
+		for {
+			// for i := 0; i < 100; i++ {
+			sim.w.Tick(1000)
+			sim.w.CullCrits(safeZoneWidth, WORLD_WIDTH)
+			// println("Living: ", len(sim.w.crits))
+			if len(sim.w.crits) == 100 {
+				println("It took ", stepCount, " steps for 100%% survival at ", mutationRate, " mutation rate")
+				mutationRate++
+				sim.w.CullCrits(0, WORLD_WIDTH)
+				sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT, mutationRate)
+				break
+			}
+			stepCount++
+			sim.w.RandomiseCritPositions()
+			sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT, mutationRate)
+			// sim.w.Tick(1000)
+			// sim.w.CullCrits(0, WORLD_WIDTH-safeZoneWidth)
+			// println("Living: ", len(sim.w.crits))
+			// sim.w.RandomiseCritPositions()
+			// sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT, 100)
+			// time.Sleep(time.Second)
+			// sim.w.CullCrits(CRIT_COUNT/WORLD_HEIGHT, WORLD_WIDTH)
+			// println("Living: ", len(sim.w.crits))
+			// sim.w.RandomiseCritPositions()
+			// sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT, 10)
+		}
 	}
 }

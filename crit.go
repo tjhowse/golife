@@ -23,7 +23,7 @@ func NewCrit(x, y, size int, w *World, connectome Connectome) *Crit {
 	s := make([]float64, len(b.inputNeurons))
 	// c := color.Black
 	// Derive a colour from a connectome
-
+	// TODO Calculate a hue, then convert HSV to RGB for display.
 	var red uint8
 	var green uint8
 	var blue uint8
