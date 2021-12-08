@@ -117,6 +117,7 @@ func main() {
 			if len(sim.w.crits) == 100 {
 				println("It took ", stepCount, " steps for 100%% survival at ", mutationRate, " mutation rate")
 				mutationRate++
+				stepCount = 0
 				sim.w.CullCrits(0, WORLD_WIDTH)
 				sim.w.RefillCritsWithMutatedConnectomes(CRIT_COUNT, mutationRate)
 				break
